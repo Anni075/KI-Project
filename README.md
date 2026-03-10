@@ -16,23 +16,22 @@ In welchem Maße können Machine-Learning-Modelle die viertelstündliche PV-Prod
 ## Scharfe Frage (Modelloutput)
 
 - Wie hoch ist die PV-Produktion je 15 Minuten am nächsten Tag?
-- Wie viel Energie steht nach Abzug der Grundlast zur Einspeisung zur Verfügung?
 
 
 ## Hypothesen
 
-### H1
-Hohe PV-Produktion führt nicht zwangsläufig zu verwertbarem Überschuss, da die Grundlast (dauerhafter Mindestverbrauch) diesen reduziert.
 
-### H2
-Modelle mit Wetter- und Einstrahlungsdaten prognostizieren die viertelstündliche PV-Produktion genauer als naive Prognosemethoden (z. B. „letzter gemessener Wert" oder historischer Durchschnitt).
+Hypothesen folie · MD
+Copy
 
-### H3
-Die Berücksichtigung zeitlicher Merkmale wie Uhrzeit und Jahreszeit verbessert die Prognose der viertelstündlichen PV-Produktion.
+# Hypothesen – Übersicht
 
-### H4
-Nichtlineare Machine-Learning-Modelle sind besser geeignet zur Prognose der viertelstündlichen PV-Produktion als lineare Regressionsmodelle.
-
+| # | Hypothese | Typ | Richtung | H₀ | H₁ | Testverfahren |
+|---|-----------|-----|----------|----|----|---------------|
+| H1 | Die Prognosegenauigkeit korreliert negativ mit dem Bewölkungsgrad – an stark bewölkten Tagen sinkt die Vorhersagequalität. | Zusammenhangshypothese | Gerichtet | Es besteht kein (oder ein positiver) Zusammenhang zwischen Bewölkungsgrad und Prognosefehler. | Je höher der Bewölkungsgrad, desto größer der Prognosefehler. | Korrelationsanalyse (Pearson / Spearman) |
+| H2 | Modelle mit Wetter- und Einstrahlungsdaten prognostizieren die PV-Produktion genauer als naive Methoden (Durchschnitt, Vortag). | Unterschiedshypothese | Gerichtet | MAE(ML) ≥ MAE(naiv) | MAE(ML) < MAE(naiv) | Paired t-Test / Wilcoxon / Diebold-Mariano-Test |
+| H3 | Die Berücksichtigung zeitlicher Merkmale (Uhrzeit, Jahreszeit) verbessert die Prognose der viertelstündlichen PV-Produktion. | Unterschiedshypothese | Gerichtet | MAE(mit Zeitfeatures) ≥ MAE(ohne) | MAE(mit Zeitfeatures) < MAE(ohne) | Paired t-Test / Wilcoxon auf Fehlerdifferenzen |
+| H4 | Nichtlineare ML-Modelle sind besser geeignet zur Prognose als lineare Regressionsmodelle. | Unterschiedshypothese | Gerichtet | MAE(nichtlinear) ≥ MAE(linear) | MAE(nichtlinear) < MAE(linear) | Paired t-Test / Wilcoxon / Diebold-Mariano-Test |
 
 ## Setup
 
