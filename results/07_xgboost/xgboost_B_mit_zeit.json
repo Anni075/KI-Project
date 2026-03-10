@@ -1,0 +1,50 @@
+{
+  "model": "xgboost_B_mit_zeit",
+  "features": [
+    "ghi_cloudy_sky",
+    "clear_sky_index",
+    "hour_sin",
+    "hour_cos",
+    "day_sin",
+    "day_cos",
+    "temperature_2m",
+    "cloud_cover_low"
+  ],
+  "params": {
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": 5,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "eval_metric": "mae",
+    "random_state": 42,
+    "n_jobs": -1,
+    "best_iteration": 85
+  },
+  "val": {
+    "rmse": 404.6685178945849,
+    "mae": 153.1759796142578,
+    "mbe": 0.16753793152069768,
+    "nrmse": 0.02997544576996925,
+    "nmae": 0.011346368860315394,
+    "nmbe": 0.0004486528458600876,
+    "r2": 0.6127454042434692,
+    "mape_daytime": 2.4255790502591603,
+    "skill_mae": 0.2777674996721974,
+    "skill_rmse": 0.30047169827956277,
+    "ramp_mae": 69.48055394335896
+  },
+  "test": {
+    "rmse": 372.86081518443314,
+    "mae": 149.88217163085938,
+    "mbe": -22.04973309549094,
+    "nrmse": 0.027619319643291344,
+    "nmae": 0.011102383083767361,
+    "nmbe": -0.062198166845353654,
+    "r2": 0.6703341603279114,
+    "mape_daytime": 2.4520496679506003,
+    "skill_mae": 0.2784249439914388,
+    "skill_rmse": 0.37065884030345253,
+    "ramp_mae": 61.68294350412443
+  }
+}

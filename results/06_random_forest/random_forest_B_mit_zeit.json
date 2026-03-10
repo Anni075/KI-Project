@@ -1,0 +1,46 @@
+{
+  "model": "random_forest_B_mit_zeit",
+  "features": [
+    "ghi_cloudy_sky",
+    "clear_sky_index",
+    "hour_sin",
+    "hour_cos",
+    "day_sin",
+    "day_cos",
+    "temperature_2m",
+    "cloud_cover_low"
+  ],
+  "params": {
+    "n_estimators": 300,
+    "max_features": "sqrt",
+    "min_samples_leaf": 4,
+    "n_jobs": -1,
+    "random_state": 42
+  },
+  "val": {
+    "rmse": 395.01165734289117,
+    "mae": 147.85175888378487,
+    "mbe": 2.025054538448913,
+    "nrmse": 0.029260122766140085,
+    "nmae": 0.01095198213953962,
+    "nmbe": 0.0054229300400831845,
+    "r2": 0.6310074567033483,
+    "mape_daytime": 1.8739554079261167,
+    "skill_mae": 0.3032444845336798,
+    "skill_rmse": 0.3173106793788888,
+    "ramp_mae": 69.86423570396306
+  },
+  "test": {
+    "rmse": 367.4688980974605,
+    "mae": 140.02959138064696,
+    "mbe": -18.929348925275647,
+    "nrmse": 0.027219918377589667,
+    "nmae": 0.010372562324492367,
+    "nmbe": -0.053396147591871626,
+    "r2": 0.6797997945838368,
+    "mape_daytime": 1.7686995014192595,
+    "skill_mae": 0.3257817521517934,
+    "skill_rmse": 0.3797379582072463,
+    "ramp_mae": 61.41057115418841
+  }
+}
