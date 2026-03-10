@@ -45,13 +45,6 @@ def load_irradiance_data(path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-def compute_pv_surplus(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a pv_surplus column: Solarproduktion minus Hausverbrauch."""
-    df = df.copy()
-    df["pv_surplus"] = df["Solarproduktion"] - df["Hausverbrauch"]
-    return df
-
-
 def merge_features(
     pv_df: pd.DataFrame,
     weather_df: pd.DataFrame,
@@ -59,20 +52,35 @@ def merge_features(
     local_tz: str = "Europe/Berlin",
 ) -> pd.DataFrame:
     """
-    Merge PV (15-min, local naive time), weather (hourly, local naive time)
-    and irradiance (15-min, UTC-aware) into a single DataFrame.
+    Zusammenführen von PV- (15-min, lokale naive Zeit), Wetter- (stündlich,
+    lokale naive Zeit) und Einstrahlungsdaten (15-min, UTC-bewusst) zu einem
+    einzigen DataFrame.
 
-    Weather is matched via backward fill (last known hourly value).
-    Irradiance is matched to the nearest 15-min slot (≤15 min tolerance).
+    Wetter: Die stündlichen Werte werden per linearer Interpolation auf ein
+    15-Minuten-Raster hochskaliert, um einen glatten zeitlichen Verlauf
+    sicherzustellen (kein Stufensprung an Stundengrenzen).
+    Merge über merge_asof mit Toleranz ≤ 15 min.
+
+    Einstrahlung: UTC-Zeitstempel → lokale naive Zeit, dann merge_asof auf den
+    nächsten 15-Minuten-Slot (Toleranz ≤ 15 min).
     """
     base = pv_df.sort_values("timestamp").reset_index(drop=True)
 
-    # Weather: hourly, already in local naive time after load_weather_data()
+    # Wetterdaten: stündlich, bereits in lokaler naiver Zeit (nach load_weather_data()).
+    # Durch lineare Interpolation auf ein 15-Minuten-Raster hochskalieren,
+    # damit keine Sprünge an Stundengrenzen entstehen, sondern ein glatter Verlauf.
     w_cols = ["timestamp", "temperature_2m", "cloud_cover", "cloud_cover_low",
               "relative_humidity_2m"]
-    w = weather_df[w_cols].sort_values("timestamp").reset_index(drop=True)
+    w = (
+        weather_df[w_cols]
+        .sort_values("timestamp")
+        .set_index("timestamp")
+        .resample("15min")
+        .interpolate(method="linear")
+        .reset_index()
+    )
     base = pd.merge_asof(base, w, on="timestamp",
-                         direction="backward", tolerance=pd.Timedelta("1h"))
+                         direction="nearest", tolerance=pd.Timedelta("15min"))
 
     # Irradiance: UTC-aware timestamps → convert to local naive time
     irr = irr_df[["timestamp", "ghi_cloudy_sky", "ghi_clear_sky"]].copy()
