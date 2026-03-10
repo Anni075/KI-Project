@@ -45,50 +45,71 @@ def load_irradiance_data(path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-def merge_features(
+def clip_to_common_range(
     pv_df: pd.DataFrame,
     weather_df: pd.DataFrame,
     irr_df: pd.DataFrame,
     local_tz: str = "Europe/Berlin",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Kürzt alle drei Rohdaten-DataFrames auf den gemeinsamen Zeitraum.
+
+    PV und Wetter liegen als lokale naive Zeit vor, Einstrahlung als
+    UTC-bewusster Zeitstempel. Der Schnitt wird in lokaler Zeit berechnet;
+    für den Irradiance-Filter wird der Bereich zurück nach UTC konvertiert.
+    """
+    irr_local = irr_df["timestamp"].dt.tz_convert(local_tz).dt.tz_localize(None)
+
+    start = max(pv_df["timestamp"].min(), weather_df["timestamp"].min(), irr_local.min())
+    end   = min(pv_df["timestamp"].max(), weather_df["timestamp"].max(), irr_local.max())
+
+    pv_out = pv_df[
+        (pv_df["timestamp"] >= start) & (pv_df["timestamp"] <= end)
+    ].reset_index(drop=True)
+    w_out = weather_df[
+        (weather_df["timestamp"] >= start) & (weather_df["timestamp"] <= end)
+    ].reset_index(drop=True)
+
+    start_utc = pd.Timestamp(start).tz_localize(local_tz).tz_convert("UTC")
+    end_utc   = pd.Timestamp(end).tz_localize(local_tz).tz_convert("UTC")
+    irr_out = irr_df[
+        (irr_df["timestamp"] >= start_utc) & (irr_df["timestamp"] <= end_utc)
+    ].reset_index(drop=True)
+
+    return pv_out, w_out, irr_out
+
+
+def set_nighttime_zero(
+    df: pd.DataFrame,
+    target_col: str = "Solarproduktion",
+    ghi_col: str = "ghi_clear_sky",
+    threshold: float = 5.0,
 ) -> pd.DataFrame:
     """
-    Zusammenführen von PV- (15-min, lokale naive Zeit), Wetter- (stündlich,
-    lokale naive Zeit) und Einstrahlungsdaten (15-min, UTC-bewusst) zu einem
-    einzigen DataFrame.
-
-    Wetter: Die stündlichen Werte werden per linearer Interpolation auf ein
-    15-Minuten-Raster hochskaliert, um einen glatten zeitlichen Verlauf
-    sicherzustellen (kein Stufensprung an Stundengrenzen).
-    Merge über merge_asof mit Toleranz ≤ 15 min.
-
-    Einstrahlung: UTC-Zeitstempel → lokale naive Zeit, dann merge_asof auf den
-    nächsten 15-Minuten-Slot (Toleranz ≤ 15 min).
+    Füllt fehlende PV-Werte (NaN) mit 0, sofern es Nacht ist
+    (ghi_clear_sky < threshold W/m²). Tagsüber bleiben NaN-Werte erhalten,
+    da sie auf ein echtes Datenproblem hinweisen würden.
     """
-    base = pv_df.sort_values("timestamp").reset_index(drop=True)
+    df = df.copy()
+    ist_nacht   = df[ghi_col] < threshold
+    ist_fehlend = df[target_col].isna()
+    df.loc[ist_nacht & ist_fehlend, target_col] = 0.0
+    return df
 
-    # Wetterdaten: stündlich, bereits in lokaler naiver Zeit (nach load_weather_data()).
-    # Durch lineare Interpolation auf ein 15-Minuten-Raster hochskalieren,
-    # damit keine Sprünge an Stundengrenzen entstehen, sondern ein glatter Verlauf.
-    w_cols = ["timestamp", "temperature_2m", "cloud_cover", "cloud_cover_low",
-              "relative_humidity_2m"]
-    w = (
-        weather_df[w_cols]
-        .sort_values("timestamp")
-        .set_index("timestamp")
-        .resample("15min")
-        .interpolate(method="linear")
-        .reset_index()
-    )
-    base = pd.merge_asof(base, w, on="timestamp",
-                         direction="nearest", tolerance=pd.Timedelta("15min"))
 
-    # Irradiance: UTC-aware timestamps → convert to local naive time
-    irr = irr_df[["timestamp", "ghi_cloudy_sky", "ghi_clear_sky"]].copy()
-    irr["timestamp"] = (
-        irr["timestamp"].dt.tz_convert(local_tz).dt.tz_localize(None)
-    )
-    irr = irr.sort_values("timestamp").reset_index(drop=True)
-    base = pd.merge_asof(base, irr, on="timestamp",
-                         direction="nearest", tolerance=pd.Timedelta("15min"))
+def load_processed_data(
+    split: str = "all",
+    path: str | Path | None = None,
+) -> pd.DataFrame:
+    """
+    Lädt aufbereitete Daten aus data/processed/.
 
-    return base
+    split: "all"   → features.csv  (vollständiger Datensatz ohne Lag-Features)
+           "train" → train.csv
+           "val"   → val.csv
+           "test"  → test.csv
+    """
+    fname = "features.csv" if split == "all" else f"{split}.csv"
+    if path is None:
+        path = _PROJECT_ROOT / "data" / "processed" / fname
+    return pd.read_csv(path, parse_dates=["timestamp"])
