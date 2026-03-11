@@ -14,23 +14,44 @@ def mae(y_true: pd.Series, y_pred: pd.Series) -> float:
 
 
 def mbe(y_true: pd.Series, y_pred: pd.Series) -> float:
-    """Mean Bias Error – zeigt systematische Über-/Unterschätzung."""
+    """Mean Bias Error – zeigt systematische Über-/Unterschätzung.
+
+    Stärken:  Systemfehler sichtbar (>0 = Überschätzung, <0 = Unterschätzung).
+    Schwächen: Kein Maß für Streuung – positive und negative Fehler heben sich auf.
+    Anwendung: Kalibrierung des Modells.
+    """
     return float((y_pred - y_true).mean())
 
 
 def r2(y_true: pd.Series, y_pred: pd.Series) -> float:
+    """Bestimmtheitsmaß – Anteil der durch das Modell erklärten Varianz.
+
+    Stärken:  Erklärte Varianz intuitiv interpretierbar (0–1).
+    Schwächen: Wenig aussagekräftig bei Skalierungsunterschieden zwischen Splits.
+    Anwendung: Feature- und Modellentwicklung.
+    """
     return float(r2_score(y_true, y_pred))
 
 
 # ── Normalisierte Metriken (Standard im PV-Forecasting) ─────────────────────
 
 def nmae(y_true: pd.Series, y_pred: pd.Series, p_nom: float) -> float:
-    """Normalized MAE – normalisiert auf installierte Nennleistung [kWp]."""
+    """Normalized MAE – normalisiert auf installierte Nennleistung [kWp].
+
+    Stärken:  Interpretierbar, robust gegenüber Ausreißern.
+    Schwächen: Ignoriert Varianz – große und kleine Fehler gleich gewichtet.
+    Anwendung: Baseline-Vergleich, Kostenrechnung.
+    """
     return mae(y_true, y_pred) / p_nom
 
 
 def nrmse(y_true: pd.Series, y_pred: pd.Series, p_nom: float) -> float:
-    """Normalized RMSE – normalisiert auf installierte Nennleistung [kWp]."""
+    """Normalized RMSE – normalisiert auf installierte Nennleistung [kWp].
+
+    Stärken:  Sensibel für Spitzenfehler (quadratische Gewichtung).
+    Schwächen: Überempfindlich bei Outliern.
+    Anwendung: Wolkenramps / Day-Ahead-Volatilität.
+    """
     return rmse(y_true, y_pred) / p_nom
 
 
