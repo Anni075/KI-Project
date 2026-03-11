@@ -79,24 +79,6 @@ def clip_to_common_range(
     return pv_out, w_out, irr_out
 
 
-def set_nighttime_zero(
-    df: pd.DataFrame,
-    target_col: str = "Solarproduktion",
-    ghi_col: str = "ghi_clear_sky",
-    threshold: float = 5.0,
-) -> pd.DataFrame:
-    """
-    Füllt fehlende PV-Werte (NaN) mit 0, sofern es Nacht ist
-    (ghi_clear_sky < threshold W/m²). Tagsüber bleiben NaN-Werte erhalten,
-    da sie auf ein echtes Datenproblem hinweisen würden.
-    """
-    df = df.copy()
-    ist_nacht   = df[ghi_col] < threshold
-    ist_fehlend = df[target_col].isna()
-    df.loc[ist_nacht & ist_fehlend, target_col] = 0.0
-    return df
-
-
 def load_processed_data(
     split: str = "all",
     path: str | Path | None = None,
