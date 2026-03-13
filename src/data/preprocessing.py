@@ -45,42 +45,53 @@ def load_irradiance_data(path: str | Path | None = None) -> pd.DataFrame:
     return df
 
 
-def compute_pv_surplus(df: pd.DataFrame) -> pd.DataFrame:
-    """Add a pv_surplus column: Solarproduktion minus Hausverbrauch."""
-    df = df.copy()
-    df["pv_surplus"] = df["Solarproduktion"] - df["Hausverbrauch"]
-    return df
-
-
-def merge_features(
+def clip_to_common_range(
     pv_df: pd.DataFrame,
     weather_df: pd.DataFrame,
     irr_df: pd.DataFrame,
     local_tz: str = "Europe/Berlin",
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """
+    Kürzt alle drei Rohdaten-DataFrames auf den gemeinsamen Zeitraum.
+
+    PV und Wetter liegen als lokale naive Zeit vor, Einstrahlung als
+    UTC-bewusster Zeitstempel. Der Schnitt wird in lokaler Zeit berechnet;
+    für den Irradiance-Filter wird der Bereich zurück nach UTC konvertiert.
+    """
+    irr_local = irr_df["timestamp"].dt.tz_convert(local_tz).dt.tz_localize(None)
+
+    start = max(pv_df["timestamp"].min(), weather_df["timestamp"].min(), irr_local.min())
+    end   = min(pv_df["timestamp"].max(), weather_df["timestamp"].max(), irr_local.max())
+
+    pv_out = pv_df[
+        (pv_df["timestamp"] >= start) & (pv_df["timestamp"] <= end)
+    ].reset_index(drop=True)
+    w_out = weather_df[
+        (weather_df["timestamp"] >= start) & (weather_df["timestamp"] <= end)
+    ].reset_index(drop=True)
+
+    start_utc = pd.Timestamp(start).tz_localize(local_tz).tz_convert("UTC")
+    end_utc   = pd.Timestamp(end).tz_localize(local_tz).tz_convert("UTC")
+    irr_out = irr_df[
+        (irr_df["timestamp"] >= start_utc) & (irr_df["timestamp"] <= end_utc)
+    ].reset_index(drop=True)
+
+    return pv_out, w_out, irr_out
+
+
+def load_processed_data(
+    split: str = "all",
+    path: str | Path | None = None,
 ) -> pd.DataFrame:
     """
-    Merge PV (15-min, local naive time), weather (hourly, local naive time)
-    and irradiance (15-min, UTC-aware) into a single DataFrame.
+    Lädt aufbereitete Daten aus data/processed/.
 
-    Weather is matched via backward fill (last known hourly value).
-    Irradiance is matched to the nearest 15-min slot (≤15 min tolerance).
+    split: "all"   → features.csv  (vollständiger Datensatz ohne Lag-Features)
+           "train" → train.csv
+           "val"   → val.csv
+           "test"  → test.csv
     """
-    base = pv_df.sort_values("timestamp").reset_index(drop=True)
-
-    # Weather: hourly, already in local naive time after load_weather_data()
-    w_cols = ["timestamp", "temperature_2m", "cloud_cover", "cloud_cover_low",
-              "relative_humidity_2m"]
-    w = weather_df[w_cols].sort_values("timestamp").reset_index(drop=True)
-    base = pd.merge_asof(base, w, on="timestamp",
-                         direction="backward", tolerance=pd.Timedelta("1h"))
-
-    # Irradiance: UTC-aware timestamps → convert to local naive time
-    irr = irr_df[["timestamp", "ghi_cloudy_sky", "ghi_clear_sky"]].copy()
-    irr["timestamp"] = (
-        irr["timestamp"].dt.tz_convert(local_tz).dt.tz_localize(None)
-    )
-    irr = irr.sort_values("timestamp").reset_index(drop=True)
-    base = pd.merge_asof(base, irr, on="timestamp",
-                         direction="nearest", tolerance=pd.Timedelta("15min"))
-
-    return base
+    fname = "features.csv" if split == "all" else f"{split}.csv"
+    if path is None:
+        path = _PROJECT_ROOT / "data" / "processed" / fname
+    return pd.read_csv(path, parse_dates=["timestamp"])
