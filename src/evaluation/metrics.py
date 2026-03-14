@@ -100,7 +100,7 @@ def skill_score(y_true: pd.Series, y_pred: pd.Series,
 
 def ramp_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     """
-    MAE der 15-min-Rampen (Δ zwischen aufeinanderfolgenden Zeitschritten).
+    MAE der 15-min-Rampen (Delta zwischen aufeinanderfolgenden Zeitschritten).
     Bewertet, wie gut schnelle Leistungsänderungen vorhergesagt werden.
     """
     ramp_true = y_true.diff().dropna()

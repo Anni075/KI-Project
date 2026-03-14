@@ -80,18 +80,18 @@ def clip_to_common_range(
 
 
 def load_processed_data(
-    split: str = "all",
     path: str | Path | None = None,
 ) -> pd.DataFrame:
     """
     Lädt aufbereitete Daten aus data/processed/.
 
     split: "all"   → features.csv  (vollständiger Datensatz ohne Lag-Features)
-           "train" → train.csv
+
+
            "val"   → val.csv
            "test"  → test.csv
     """
-    fname = "features.csv" if split == "all" else f"{split}.csv"
+    fname = "features.csv"
     if path is None:
         path = _PROJECT_ROOT / "data" / "processed" / fname
     return pd.read_csv(path, parse_dates=["timestamp"])
