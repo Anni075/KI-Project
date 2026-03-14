@@ -338,9 +338,7 @@ dependencies = [
     { name = "matplotlib" },
     { name = "missingno" },
     { name = "pandas" },
-    { name = "pandas-stubs" },
     { name = "scikit-learn" },
-    { name = "scipy-stubs" },
     { name = "seaborn" },
     { name = "xgboost" },
 ]
@@ -348,6 +346,8 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "ipykernel" },
+    { name = "pandas-stubs" },
+    { name = "scipy-stubs" },
 ]
 
 [package.metadata]
@@ -355,15 +355,17 @@ requires-dist = [
     { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "missingno", specifier = ">=0.5.2" },
     { name = "pandas", specifier = ">=3.0.0" },
-    { name = "pandas-stubs", specifier = ">=3.0.0.260204" },
     { name = "scikit-learn", specifier = ">=1.8.0" },
-    { name = "scipy-stubs", specifier = ">=1.17.1.1" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "xgboost", specifier = ">=3.2.0" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "ipykernel", specifier = ">=7.1.0" }]
+dev = [
+    { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "pandas-stubs", specifier = ">=3.0.0.260204" },
+    { name = "scipy-stubs", specifier = ">=1.17.1.1" },
+]
 
 [[package]]
 name = "kiwisolver"
