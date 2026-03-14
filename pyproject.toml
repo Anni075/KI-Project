@@ -16,6 +16,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ipykernel>=7.1.0",
+    "nbconvert>=7.17.0",
+    "nbformat>=5.10.4",
     "pandas-stubs>=3.0.0.260204",
     "scipy-stubs>=1.17.1.1",
 ]
