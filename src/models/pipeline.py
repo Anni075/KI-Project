@@ -29,6 +29,12 @@ def _save(result: dict, path: Path) -> None:
     print(f"Saved: {path}")
 
 
+def _save_predictions(y_true: pd.Series, y_pred: pd.Series, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame({"y_true": y_true, "y_pred": y_pred}).rename_axis("timestamp").to_csv(path)
+    print(f"Saved predictions: {path}")
+
+
 def run_pipeline(
     model_name: str,
     predict_fn: Callable,
@@ -72,7 +78,10 @@ def run_pipeline(
     }
 
     if results_dir is not None:
-        _save(result, Path(results_dir) / f"{model_name}.json")
+        base = Path(results_dir)
+        _save(result, base / f"{model_name}.json")
+        _save_predictions(y_train, pred_train, base / f"{model_name}_predictions_train.csv")
+        _save_predictions(y_val,   pred_val,   base / f"{model_name}_predictions_val.csv")
 
     return result
 
@@ -98,6 +107,8 @@ def evaluate_on_test(
     result["by_season"]["test"] = test_season
 
     if results_dir is not None:
-        _save(result, Path(results_dir) / f"{result['model']}.json")
+        base = Path(results_dir)
+        _save(result, base / f"{result['model']}.json")
+        _save_predictions(y_test, pred_test, base / f"{result['model']}_predictions_test.csv")
 
     return result

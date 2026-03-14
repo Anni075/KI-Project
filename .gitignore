@@ -208,3 +208,6 @@ __marimo__/
 
 # temp / local data
 /data/processed/merged.csv
+
+# per-sample prediction CSVs (derived data, not versioned)
+results/**/*_predictions_*.csv
