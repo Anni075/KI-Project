@@ -2,9 +2,9 @@
 ## Thema
 Viertelstündliche Day-Ahead-Prognose der PV-Produktion mittels Machine Learning.
 
-* **Stufe 0:** Naive Baseline - [Notebook](notebooks/03_naive_baseline.ipynb)
-* **Stufe 1:** Lineare Regression - [Notebook](notebooks/05_linear_regression.ipynb)
-* **Stufe 2:** Random Forest - [Notebook](notebooks/06_random_forest.ipynb)
+* **Stufe 0:** Naive Baseline - [Notebook](notebooks/models/00_naive_baseline.ipynb)
+* **Stufe 1:** Lineare Regression - [Notebook](notebooks/models/01_linear_regression.ipynb)
+* **Stufe 2:** Random Forest - [Notebook](notebooks/models/02_random_forest.ipynb)
 
 ## Forschungsfrage
 Wie genau können Machine-Learning-Modelle die viertelstündliche PV-Produktion anhand von Wetter- und Einstrahlungsdaten für den Folgetag vorhersagen?
@@ -21,6 +21,16 @@ Wie hoch ist die PV-Produktion je 15 Minuten am nächsten Tag in Watt?
 | H4 | Nichtlineare ML-Modelle sind besser geeignet zur Prognose als lineare Regressionsmodelle.                                    | Unterschiedshypothese  | Gerichtet | MAE(nichtlinear) ≥ MAE(linear)                                                                | MAE(nichtlinear) < MAE(linear)                                | Paired t-Test / Wilcoxon / Diebold-Mariano-Test |
 
 ## Setup
+
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management.
+
+**1. Install uv** (if not already installed):
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**2. Install dependencies and run:**
 ```bash
 uv sync
+uv run jupyter notebook
 ```
