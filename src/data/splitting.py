@@ -5,28 +5,6 @@ _SEASON_MAP = {12: "Winter", 1: "Winter", 2: "Winter",
                6: "Summer", 7: "Summer", 8: "Summer",
                9: "Autumn", 10: "Autumn", 11: "Autumn"}
 
-
-def add_season_column(df: pd.DataFrame, timestamp_col: str = "timestamp") -> pd.DataFrame:
-    """Fügt eine 'season'-Spalte hinzu (Winter/Spring/Summer/Autumn)."""
-    df = df.copy()
-    df["season"] = df[timestamp_col].dt.month.map(_SEASON_MAP)
-    return df
-
-
-def split_season_distribution(
-    train: pd.DataFrame, val: pd.DataFrame, test: pd.DataFrame,
-    timestamp_col: str = "timestamp",
-) -> pd.DataFrame:
-    """Zeigt die saisonale Zusammensetzung jedes Splits (als Anteil)."""
-    seasons = ["Winter", "Spring", "Summer", "Autumn"]
-    rows = {}
-    for name, subset in [("train", train), ("val", val), ("test", test)]:
-        months = subset[timestamp_col].dt.month.map(_SEASON_MAP)
-        counts = months.value_counts(normalize=True).reindex(seasons, fill_value=0.0)
-        rows[name] = counts.round(3)
-    return pd.DataFrame(rows).T
-
-
 def time_series_split(
     df: pd.DataFrame,
     val_frac: float = 0.15,
